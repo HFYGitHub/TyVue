@@ -26,8 +26,8 @@
           <div class="field-row">
             <span class="field-icon">👤</span>
             <input
-              id="username"
-              v-model="username"
+              id="userName"
+              v-model="userName"
               type="text"
               required
               :placeholder="isLoginMode ? '请输入账号' : '请输入用户名'"
@@ -37,9 +37,9 @@
           <div class="field-row">
             <span class="field-icon">🔒</span>
             <input
-              id="password"
-              v-model="password"
-              type="password"
+              id="pwd"
+              v-model="pwd"
+              type="pwd"
               required
               placeholder="请输入密码"
             />
@@ -48,9 +48,9 @@
           <div class="field-row" v-if="!isLoginMode">
             <span class="field-icon">🔒</span>
             <input
-              id="confirmPassword"
-              v-model="confirmPassword"
-              type="password"
+              id="repeatPwd"
+              v-model="repeatPwd"
+              type="pwd"
               required
               placeholder="请再次输入密码"
             />
@@ -95,10 +95,25 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-const username = ref('')
-const password = ref('')
-const confirmPassword = ref('')
+const router = useRouter()
+const userName = ref('')
+const pwd = ref('')
+const repeatPwd = ref('')
+
+// 带 token 的 fetch 请求封装
+const fetchWithToken = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token')
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  return fetch(url, { ...options, headers })
+}
 const autoLogin = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
@@ -106,9 +121,9 @@ const successMessage = ref('')
 const isLoginMode = ref(true)
 
 const resetForm = () => {
-  username.value = ''
-  password.value = ''
-  confirmPassword.value = ''
+  userName.value = ''
+  pwd.value = ''
+  repeatPwd.value = ''
   autoLogin.value = false
   errorMessage.value = ''
   successMessage.value = ''
@@ -133,23 +148,31 @@ const handleLogin = async () => {
   successMessage.value = ''
 
   try {
-    const response = await fetch('http://127.0.0.1:10522/app/login', {
+    const response = await fetchWithToken('/api/admin/users/login', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({
-        username: username.value,
-        password: password.value
+        userName: userName.value,
+        pwd: pwd.value
       })
     })
 
-    if (response.ok) {
-      const data = await response.json()
-      successMessage.value = '登录成功！'
-      console.log('登录成功:', data)
+    const result = await response.json()
+    const msg = result?.message || '操作完成。'
+
+    if (result?.code === 200) {
+      // 保存 token 到 localStorage
+      if (result.data) {
+        localStorage.setItem('token', result.data)
+      }
+      successMessage.value = msg
+      console.log('登录成功:', result)
+      // 登录成功后跳转到功能页面
+      setTimeout(() => {
+        router.push('/features')
+      }, 500)
     } else {
-      errorMessage.value = '登录失败，请检查账号和密码。'
+      errorMessage.value = msg
+      console.warn('登录失败:', result)
     }
   } catch (error) {
     errorMessage.value = '网络错误，请稍后重试。'
@@ -160,7 +183,7 @@ const handleLogin = async () => {
 }
 
 const handleRegister = async () => {
-  if (password.value !== confirmPassword.value) {
+  if (pwd.value !== repeatPwd.value) {
     errorMessage.value = '两次输入的密码不一致。'
     return
   }
@@ -170,24 +193,25 @@ const handleRegister = async () => {
   successMessage.value = ''
 
   try {
-    const response = await fetch('http://127.0.0.1:10522/app/register', {
+    const response = await fetchWithToken('/api/admin/users/register', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({
-        username: username.value,
-        password: password.value
+        userName: userName.value,
+        pwd: pwd.value,
+        repeatPwd: repeatPwd.value
       })
     })
 
-    if (response.ok) {
-      const data = await response.json()
-      successMessage.value = '注册成功，请登录！'
-      console.log('注册成功:', data)
+    const result = await response.json()
+    const msg = result?.message || '操作完成。'
+
+    if (result?.code === 200) {
+      successMessage.value = msg
+      console.log('注册成功:', result)
       setMode('login')
     } else {
-      errorMessage.value = '注册失败，请稍后重试。'
+      errorMessage.value = msg
+      console.warn('注册失败:', result)
     }
   } catch (error) {
     errorMessage.value = '网络错误，请稍后重试。'
