@@ -5,6 +5,7 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   server: {
+    host: '0.0.0.0', // 👈关键：允许局域网访问
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:10522',

@@ -3,6 +3,7 @@ import Login from './components/Login.vue'
 import Dashboard from './pages/Dashboard.vue'
 import Features from './pages/Features.vue'
 import AnswerBook from './pages/AnswerBook.vue'
+import LuckyDraw from './pages/LuckyDraw.vue'
 
 const routes = [
   {
@@ -24,6 +25,11 @@ const routes = [
     path: '/answer-book',
     component: AnswerBook,
     name: 'AnswerBook'
+  },
+  {
+    path: '/lucky-draw',
+    component: LuckyDraw,
+    name: 'LuckyDraw'
   },
   {
     path: '/',

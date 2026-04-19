@@ -85,6 +85,9 @@ const functions = ref([
 ])
 
 const handleFunctionClick = (func: any) => {
+  if (func.id === 1) {
+    router.push('/lucky-draw')
+  }
   if (func.id === 2) {
     router.push('/answer-book')
   }
