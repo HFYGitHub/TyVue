@@ -105,9 +105,9 @@ const repeatPwd = ref('')
 // 带 token 的 fetch 请求封装
 const fetchWithToken = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token')
-  const headers = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers
+    ...(options.headers as Record<string, string> | undefined)
   }
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
